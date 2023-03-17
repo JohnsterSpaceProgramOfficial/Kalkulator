@@ -18,6 +18,8 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
     public const string ModGuid = MyPluginInfo.PLUGIN_GUID;
     public const string ModName = MyPluginInfo.PLUGIN_NAME;
     public const string ModVer = MyPluginInfo.PLUGIN_VERSION;
+
+    //A variable used for referencing the name of the mod's author
     public const string ModAuthor = "Johnster Space Program";
     
     private bool _isWindowOpen;
@@ -86,7 +88,7 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
                 GUIUtility.GetControlID(FocusType.Passive),
                 _windowRect,
                 FillWindow,
-                ModName + " " + ModVer, //Displays the window's title as "Kalkulator 1.0.0"
+                "<color=#00B400>// " + ModName.ToUpper() + " " + ModVer + "</color>", //Display a window titled "KALKULATOR 1.0.0"
                 GUILayout.Height(300),
                 GUILayout.Width(300)
             );
@@ -100,7 +102,7 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
     private void FillWindow(int windowID)
     {
         //This void [FillWindow] contains all of the functionality of the Kalkulator mod.
-        GUILayout.Label("How To Use: Enter numbers that you want to calculate, choose a calculation type, and then press the calculate button.");
+        GUILayout.Label("<size=15>How To Use: Enter numbers that you want to calculate, choose a calculation type, and then press the calculate result button.</size>");
         GUILayout.Space(10);
 
         GUILayout.BeginHorizontal();
@@ -152,27 +154,33 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
         GUILayout.Space(5);
         if (GUILayout.Button("<size=20>Calculate Result!</size>", GUILayout.Height(40)))
         {
-            float value1 = float.Parse(numberOne);
-            float value2 = float.Parse(numberTwo);
-            if (calcType == CalculationType.Addition)
+            float value1 = 0;
+            float value2 = 0;
+            if (float.TryParse(numberOne, out value1) && float.TryParse(numberTwo, out value2))
             {
-                calculatedNumber = value1 + value2;
-            }
-            else if (calcType == CalculationType.Subtraction)
-            {
-                calculatedNumber = value1 - value2;
-            }
-            else if (calcType == CalculationType.Multiplication)
-            {
-                calculatedNumber = value1 * value2;
-                if (calculatedNumber > int.MaxValue)
+                value1 = float.Parse(numberOne);
+                value2 = float.Parse(numberTwo);
+
+                if (calcType == CalculationType.Addition)
                 {
-                    calculatedNumber = int.MaxValue;
+                    calculatedNumber = value1 + value2;
                 }
-            }
-            else if (calcType == CalculationType.Division)
-            {
-                calculatedNumber = value1 / value2;
+                else if (calcType == CalculationType.Subtraction)
+                {
+                    calculatedNumber = value1 - value2;
+                }
+                else if (calcType == CalculationType.Multiplication)
+                {
+                    calculatedNumber = value1 * value2;
+                    if (calculatedNumber > int.MaxValue)
+                    {
+                        calculatedNumber = int.MaxValue;
+                    }
+                }
+                else if (calcType == CalculationType.Division)
+                {
+                    calculatedNumber = value1 / value2;
+                }
             }
         }
         GUILayout.BeginHorizontal();
