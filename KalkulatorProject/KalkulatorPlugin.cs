@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using KSP.UI.Binding;
 using SpaceWarp;
@@ -65,13 +66,25 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
 
         // Register all Harmony patches in the project
         Harmony.CreateAndPatchAll(typeof(KalkulatorPlugin).Assembly);
-        
+
         // Fetch a configuration value or create a default one if it does not exist
-        //var defaultValue = "my_value";
-        //var configValue = Config.Bind<string>("Settings section", "Option 1", defaultValue, "Option description");
+        CFG_CalcAnywhere = Config.Bind("Mod Settings", "Calculator Anywhere", false, "Enable this to show the calculator anywhere when pressing the C key.");
         
         // Log the config value into <KSP2 Root>/BepInEx/LogOutput.log
-        //Logger.LogInfo($"Option 1: {configValue.Value}");
+        Logger.LogInfo($"Calculator Anywhere: {CFG_CalcAnywhere.Value}");
+    }
+
+    /// <summary>
+    /// If the calculator anywhere setting is enabled, show the calculator on the screen if it's currently closed when pressing the C key.
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (Input.GetKeyDown(KeyCode.C) && CFG_CalcAnywhere.Value && !_isWindowOpen)
+        {
+            _isWindowOpen = true;
+            GameObject.Find(ToolbarFlightButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(true);
+            GameObject.Find(ToolbarOABButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(true);
+        }
     }
 
     /// <summary>
@@ -88,7 +101,7 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
                 GUIUtility.GetControlID(FocusType.Passive),
                 _windowRect,
                 FillWindow,
-                "<color=#00B400>// " + ModName.ToUpper() + " " + ModVer + "</color>", //Display a window titled "KALKULATOR 1.0.0"
+                "<color=#00B400>// " + ModName.ToUpper() + " " + ModVer + "</color>", //Display a window titled "KALKULATOR 1.0.1"
                 GUILayout.Height(300),
                 GUILayout.Width(300)
             );
@@ -199,6 +212,10 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
             if (_isWindowOpen)
             {
                 _isWindowOpen = false;
+
+                //Bugfix code added in the 1.0.1 update
+                GameObject.Find(ToolbarFlightButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(false);
+                GameObject.Find(ToolbarOABButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(false);
             }
         }
         GUILayout.Label("<size=15>" + ModName + " Mod V" + ModVer + " Created By " + ModAuthor + ".</size>");
@@ -217,4 +234,7 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
     private string numberTwo = "0";
     private float calculatedNumber = 0;
     private CalculationType calcType;
+
+    //Boolean for the calculator anywhere setting, which was added in the 1.0.1 update
+    internal ConfigEntry<bool> CFG_CalcAnywhere;
 }
