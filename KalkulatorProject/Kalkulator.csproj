@@ -8,7 +8,7 @@
         <AssemblyName>com.github.johnsterspaceprogram.kalkulator</AssemblyName>
         <Product>Kalkulator</Product>
         <Description>Adds a basic calculator with addition, subtraction, multiplication, and division functionality.</Description>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <RestoreAdditionalProjectSources>
             https://api.nuget.org/v3/index.json;
             https://nuget.bepinex.dev/v3/index.json

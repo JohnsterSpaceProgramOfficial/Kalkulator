@@ -68,22 +68,25 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
         Harmony.CreateAndPatchAll(typeof(KalkulatorPlugin).Assembly);
 
         // Fetch a configuration value or create a default one if it does not exist
-        CFG_CalcAnywhere = Config.Bind("Mod Settings", "Calculator Anywhere", false, "Enable this to show the calculator anywhere when pressing the C key.");
+        CFG_CalcAnywhere = Config.Bind("Mod Settings", "Calculator Anywhere", false, "Enable this to show the calculator anywhere when pressing Left Control + C.");
         
         // Log the config value into <KSP2 Root>/BepInEx/LogOutput.log
         Logger.LogInfo($"Calculator Anywhere: {CFG_CalcAnywhere.Value}");
     }
 
     /// <summary>
-    /// If the calculator anywhere setting is enabled, show the calculator on the screen if it's currently closed when pressing the C key.
+    /// If the calculator anywhere setting is enabled, show the calculator on the screen if it's currently closed when pressing the C key while holding Left Control down.
     /// </summary>
     private void LateUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.C) && CFG_CalcAnywhere.Value && !_isWindowOpen)
+        if (Input.GetKey(KeyCode.LeftControl))
         {
-            _isWindowOpen = true;
-            GameObject.Find(ToolbarFlightButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(true);
-            GameObject.Find(ToolbarOABButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(true);
+            if (Input.GetKeyDown(KeyCode.C) && CFG_CalcAnywhere.Value && !_isWindowOpen)
+            {
+                _isWindowOpen = true;
+                GameObject.Find(ToolbarFlightButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(true);
+                GameObject.Find(ToolbarOABButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(true);
+            }
         }
     }
 
@@ -101,8 +104,7 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
                 GUIUtility.GetControlID(FocusType.Passive),
                 _windowRect,
                 FillWindow,
-                "<color=#00B400>// " + ModName.ToUpper() + " " + ModVer + "</color>", //Display a window titled "KALKULATOR 1.0.1"
-                GUILayout.Height(300),
+                "<color=#00B400>// " + ModName.ToUpper() + " " + ModVer + "</color>", //Display a window titled "KALKULATOR 1.0.2"
                 GUILayout.Width(300)
             );
         }
@@ -115,34 +117,46 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
     private void FillWindow(int windowID)
     {
         //This void [FillWindow] contains all of the functionality of the Kalkulator mod.
-        GUILayout.Label("<size=15>How To Use: Enter numbers that you want to calculate, choose a calculation type, and then press the calculate result button.</size>");
+        GUILayout.BeginVertical();
+        if (GUI.Button(new Rect(_windowRect.width - 65, 5, 60, 30), "<size=20>Close</size>"))
+        {
+            if (_isWindowOpen)
+            {
+                _isWindowOpen = false;
+
+                //Bugfix code added in the 1.0.1 update
+                GameObject.Find(ToolbarFlightButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(false);
+                GameObject.Find(ToolbarOABButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(false);
+            }
+        }
+        GUILayout.EndVertical();
+
         GUILayout.Space(10);
+        GUILayout.Label("<size=15>How To Use: Enter numbers that you want to calculate, choose a calculation type, and then press the calculate button.</size>");
+        GUILayout.Space(5);
 
         GUILayout.BeginHorizontal();
-        numberOne = GUILayout.TextField(numberOne, 8, GUILayout.Height(40), GUILayout.Width(160));
-        GUILayout.FlexibleSpace();
+        numberOne = GUILayout.TextField(numberOne, 8, GUILayout.Height(40), GUILayout.Width(80));
         if (calcType == CalculationType.Addition)
         {
-            GUILayout.Label("<size=30>+</size>");
+            GUILayout.Button("<size=30>+</size>", GUILayout.Height(40), GUILayout.Width(35));
         }
         else if (calcType == CalculationType.Subtraction)
         {
-            GUILayout.Label("<size=30>-</size>");
+            GUILayout.Button("<size=30>-</size>", GUILayout.Height(40), GUILayout.Width(35));
         }
         else if (calcType == CalculationType.Multiplication)
         {
-            GUILayout.Label("<size=30>X</size>");
+            GUILayout.Button("<size=30>X</size>", GUILayout.Height(40), GUILayout.Width(35));
         }
         else if (calcType == CalculationType.Division)
         {
-            GUILayout.Label("<size=30>÷</size>");
+            GUILayout.Button("<size=30>÷</size>", GUILayout.Height(40), GUILayout.Width(35));
         }
-        GUILayout.FlexibleSpace();
-        numberTwo = GUILayout.TextField(numberTwo, 8, GUILayout.Height(40), GUILayout.Width(160));
+        numberTwo = GUILayout.TextField(numberTwo, 8, GUILayout.Height(40), GUILayout.Width(80));
+        GUILayout.Label("<size=27> = " + calculatedNumber + "</size>", GUILayout.Height(40));
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(10);
-        GUILayout.Label("<size=25>Result: " + calculatedNumber + "</size>");
         GUILayout.Space(10);
 
         GUILayout.BeginHorizontal();
@@ -164,8 +178,19 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
         }
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(5);
-        if (GUILayout.Button("<size=20>Calculate Result!</size>", GUILayout.Height(40)))
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("<size=22.5>Clear Numbers</size>", GUILayout.Height(35)))
+        {
+            numberOne = "0";
+            numberTwo = "0";
+        }
+        if (GUILayout.Button("<size=22.5>Clear Result</size>", GUILayout.Height(35)))
+        {
+            calculatedNumber = 0;
+        }
+        GUILayout.EndHorizontal();
+
+        if (GUILayout.Button("<size=25>Calculate!</size>", GUILayout.Height(40)))
         {
             float value1 = 0;
             float value2 = 0;
@@ -196,29 +221,8 @@ public class KalkulatorPlugin : BaseSpaceWarpPlugin
                 }
             }
         }
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("<size=20>Clear Numbers</size>", GUILayout.Height(40), GUILayout.Width(215)))
-        {
-            numberOne = "0";
-            numberTwo = "0";
-        }
-        if (GUILayout.Button("<size=20>Clear Result</size>", GUILayout.Height(40), GUILayout.Width(215)))
-        {
-            calculatedNumber = 0;
-        }
-        GUILayout.EndHorizontal();
-        if (GUILayout.Button("<size=20>Close Kalkulator</size>", GUILayout.Height(40)))
-        {
-            if (_isWindowOpen)
-            {
-                _isWindowOpen = false;
 
-                //Bugfix code added in the 1.0.1 update
-                GameObject.Find(ToolbarFlightButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(false);
-                GameObject.Find(ToolbarOABButtonID)?.GetComponent<UIValue_WriteBool_Toggle>()?.SetValue(false);
-            }
-        }
-        GUILayout.Label("<size=15>" + ModName + " Mod V" + ModVer + " Created By " + ModAuthor + ".</size>");
+        GUILayout.Label("<size=15>" + ModName + " Mod Created By " + ModAuthor + ".</size>");
         GUI.DragWindow(new Rect(0, 0, 10000, 500));
     }
 
