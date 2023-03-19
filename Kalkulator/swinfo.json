@@ -4,7 +4,7 @@
   "name": "Kalkulator",
   "description": "Adds a basic calculator with addition, subtraction, multiplication, and division functionality.",
   "source": "https://github.com/JohnsterSpaceProgramOfficial/Kalkulator",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "dependencies": [
     {
       "id":  "SpaceWarp",
